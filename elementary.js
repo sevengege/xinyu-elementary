@@ -427,7 +427,7 @@
   };
 
   window.xyOpenModePicker = function () {
-    if (window.innerWidth > 700) {
+    if (window.innerWidth > 900) {
       document.getElementById('mode-list').scrollIntoView({behavior:'smooth'});
       window.xyToast('可在左侧选择语文、数学或英语能力');
       return;
@@ -447,7 +447,7 @@
     const backdrop = document.getElementById('xy-mode-backdrop');
     if (list) {
       list.classList.remove('open');
-      if (window.innerWidth <= 700) list.setAttribute('aria-hidden', 'true');
+      if (window.innerWidth <= 900) list.setAttribute('aria-hidden', 'true');
     }
     if (backdrop) backdrop.classList.remove('show');
     document.body.classList.remove('xy-mode-picker-open');
@@ -520,6 +520,19 @@
   });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') window.xyCloseModePicker();
+  });
+  window.addEventListener('resize', () => {
+    const list = document.getElementById('mode-list');
+    const backdrop = document.getElementById('xy-mode-backdrop');
+    if (!list || !backdrop) return;
+    if (window.innerWidth > 900) {
+      list.classList.remove('open');
+      list.setAttribute('aria-hidden', 'false');
+      backdrop.classList.remove('show');
+      document.body.classList.remove('xy-mode-picker-open');
+    } else if (!list.classList.contains('open')) {
+      list.setAttribute('aria-hidden', 'true');
+    }
   });
   document.querySelectorAll('[data-island]').forEach(card => card.addEventListener('keydown', event => {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.xySelectIsland(card.dataset.island); }
