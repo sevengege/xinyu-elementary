@@ -175,6 +175,7 @@
     <nav class="xy-mobile-bar" aria-label="移动端主导航">
       ${navButton('today', 'home', '今天')}${navButton('islands', 'explore', '学习岛')}${navButton('ai', 'smart_toy', '问心语')}${navButton('profile', 'spa', '我的')}
     </nav>
+    <button type="button" class="xy-mode-backdrop" id="xy-mode-backdrop" onclick="xyCloseModePicker()" aria-label="关闭学习能力选择"></button>
 
     <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div class="modal">
@@ -247,7 +248,7 @@
     const list = document.getElementById('mode-list');
     if (!list) return;
     const extra = [...METHODS, ...TOOLS].includes(currentMode) ? modeGroup('从“我的”打开', [currentMode]) : '';
-    list.innerHTML = `<div class="xy-ai-modes-head"><h2>选择学习能力</h2><p>只保留小学适用的学科</p></div>${extra}${modeGroup('语文岛',ACADEMIC.chinese)}${modeGroup('数学岛',ACADEMIC.math)}${modeGroup('英语岛',ACADEMIC.english)}`;
+    list.innerHTML = `<div class="xy-ai-modes-head"><div class="xy-ai-modes-copy"><h2>选择学习能力</h2><p>语文、数学、英语能力均可切换</p></div><button class="xy-mode-close" onclick="xyCloseModePicker()" aria-label="关闭能力菜单"><span class="material-symbols-outlined">close</span></button></div>${extra}${modeGroup('语文岛',ACADEMIC.chinese)}${modeGroup('数学岛',ACADEMIC.math)}${modeGroup('英语岛',ACADEMIC.english)}`;
   }
 
   function renderTools() {
@@ -354,6 +355,7 @@
 
   window.xyNavigate = function (page) {
     if (!['today','islands','ai','profile'].includes(page)) page = 'today';
+    if (page !== 'ai') window.xyCloseModePicker();
     currentPage = page;
     localStorage.setItem(PAGE_KEY, page);
     document.querySelectorAll('.xy-page').forEach(el => el.classList.toggle('active', el.id === `page-${page}`));
@@ -364,6 +366,7 @@
 
   window.xySelectMode = function (idx) {
     switchMode(idx);
+    window.xyCloseModePicker();
     window.xyNavigate('ai');
   };
 
@@ -429,8 +432,25 @@
       window.xyToast('可在左侧选择语文、数学或英语能力');
       return;
     }
-    window.xyNavigate('islands');
-    window.xyToast('请选择学科和你现在的需求');
+    renderModeList();
+    const list = document.getElementById('mode-list');
+    const backdrop = document.getElementById('xy-mode-backdrop');
+    list.classList.add('open');
+    list.setAttribute('aria-hidden', 'false');
+    backdrop.classList.add('show');
+    document.body.classList.add('xy-mode-picker-open');
+    setTimeout(() => (list.querySelector('.xy-mode-button.active') || list.querySelector('.xy-mode-button'))?.focus(), 80);
+  };
+
+  window.xyCloseModePicker = function () {
+    const list = document.getElementById('mode-list');
+    const backdrop = document.getElementById('xy-mode-backdrop');
+    if (list) {
+      list.classList.remove('open');
+      if (window.innerWidth <= 700) list.setAttribute('aria-hidden', 'true');
+    }
+    if (backdrop) backdrop.classList.remove('show');
+    document.body.classList.remove('xy-mode-picker-open');
   };
 
   window.xyCopyMessage = function (idx, button) {
@@ -497,6 +517,9 @@
   input.addEventListener('input', () => autoResize(input));
   document.getElementById('settingsModal').addEventListener('click', event => {
     if (event.target === event.currentTarget) toggleSettings();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') window.xyCloseModePicker();
   });
   document.querySelectorAll('[data-island]').forEach(card => card.addEventListener('keydown', event => {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.xySelectIsland(card.dataset.island); }
